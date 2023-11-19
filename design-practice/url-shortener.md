@@ -212,8 +212,8 @@ which is a key objective of a URL shortener.
 This makes it suitable for URLs, where special characters can sometimes cause issues in browsers or when copied and pasted across different platforms.
 
 ### Usage in URL Shortener
-- **URL Generation**: The sequencer generates a unique numeric identifier for each new URL. The base58 encoder then converts
-this number into a short string, forming the path of the shortened URL.
+- **URL Generation**: The sequencer generates a unique numeric identifier for each new URL using a snowflake ID generator. 
+Using a snowflake ID generator ensures that the IDs are unique across different servers and can be generated quickly.
+The base58 encoder then converts this number into a short string, forming the path of the shortened URL.
 - **Scalability and Uniqueness**: With a pool of 58 characters, base58 provides a vast number of combinations,
 ensuring that unique URLs can be generated for a large volume of entries, which is essential for scalability and uniqueness in the system.
-
