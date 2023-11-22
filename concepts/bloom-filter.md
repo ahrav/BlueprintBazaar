@@ -47,6 +47,33 @@ It's probabilistic, which means it can tell with certainty if an element is not 
 - The Bloom filter uses hash functions to map elements to the bit array. When adding, it sets the bits at these positions to 1. During a lookup, if all bits are 1, the element is probably in the set; if any bit is 0, the element is not in the set.
 - **False Positives**: There can be false positives (being told an element is in the set when it's not), but no false negatives.
 
+### Guidance on When to Use a Bloom Filter
+
+#### Use a Bloom Filter When:
+1. **Space Efficiency is a Priority**: If you need to handle large data sets and memory is a constraint, Bloom filters are highly space-efficient.
+2. **Fast Membership Testing is Needed**: For applications requiring quick determination of whether an element is in a set or not.
+3. **False Positives are Acceptable**: Ideal for scenarios where false positives are tolerable, but false negatives are not.
+4. **Reducing Expensive Operations**: Helpful in reducing the need for costly operations (like disk or network access) by
+filtering out unnecessary requests.
+5. **Large Datasets and Distributed Systems**: Especially useful in distributed systems for efficiently synchronizing or checking data.
+
+#### Avoid Using a Bloom Filter When:
+1. **False Positives are Unacceptable**: If your application cannot tolerate false positives.
+2. **Need for Exactness**: When exact data storage and retrieval are necessary.
+3. **Deletion Requirements**: If you need to frequently delete items from the set, standard Bloom filters do not support deletion.
+
+### Advantages of Bloom Filters
+- **Highly Space-Efficient**: Uses much less space than other data structures for similar purposes.
+- **Fast Operations**: Offers very quick additions and queries.
+- **Scalability**: Works well for large datasets and scales well in distributed environments.
+- **No False Negatives**: If a Bloom filter says an element is not present, it is definitely not there.
+
+### Disadvantages of Bloom Filters
+- **False Positives**: There is a non-zero probability of false positives.
+- **No Deletion**: Standard Bloom filters do not allow for the deletion of elements once added.
+- **Fixed Size**: The size of the Bloom filter must be defined at the start, and it cannot be resized without rehashing all elements.
+- **Tuning Complexity**: Requires careful tuning of size and number of hash functions based on expected data size and acceptable false positive rate.
+
 ### Real-World Systems Using Bloom Filters
 - **Network Routers**: For quickly checking if a URL is in a list of malicious websites.
 - **Databases**: Cassandra and Redis use Bloom filters to check if a key is in a dataset before querying the disk.
