@@ -87,6 +87,14 @@ In summary the key metrics are:
 - **Function**: Detects and removes duplicate content.
 - **Purpose**: Ensures the crawler does not process the same content multiple times, improving efficiency.
 
+### Parser
+- **Function**: Extracts useful information from the downloaded content.
+- **Purpose**: Enables the crawler to understand the content and extract relevant data.
+
+### Link Extractor
+- **Function**: Identifies links to other pages for further crawling.
+- **Purpose**: Enables the crawler to navigate the web and discover new URLs.
+
 ### Message Broker
 - **Function**: Manages communication between different components of the system.
 - **Purpose**: Facilitates asynchronous processing and decouples the system components for scalability and reliability.
@@ -111,3 +119,6 @@ In summary the key metrics are:
 - **Function**: Temporarily stores frequently accessed data.
 - **Purpose**: Reduces the load on primary storage and improves response times for repeated requests.
 
+### Bloom Filters
+- **Function**: Determines if a URL has already been crawled.
+- **Purpose**: Improves the efficiency of the dedupe service by filtering out URLs that have already been crawled.
