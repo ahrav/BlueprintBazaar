@@ -18,7 +18,7 @@ func TestBasicBloomFilter(t *testing.T) {
 		{[]byte("not-added"), false},
 	}
 
-	bf := NewBasicBloomFilter(WithCapacity(1000), WithFalsePositiveRate(0.01), WithHasher(xxHasher{}))
+	bf := NewBasicBloomFilter(WithCapacity(1000), WithFalsePositiveRate(0.01))
 
 	falsePositives := 0
 	totalNotAdded := 0
@@ -54,7 +54,7 @@ func TestBasicBloomFilterConcurrent(t *testing.T) {
 		numRandomTests   = 100_000
 	)
 
-	bf := NewBasicBloomFilter(WithCapacity(10_000_000), WithFalsePositiveRate(0.01), WithHasher(xxHasher{}))
+	bf := NewBasicBloomFilter(WithCapacity(10_000_000), WithFalsePositiveRate(0.01))
 	var wg1 sync.WaitGroup
 
 	for i := 0; i < numElementsToAdd; i++ {
@@ -106,7 +106,7 @@ func TestBasicBloomFilterConcurrent(t *testing.T) {
 
 // BenchmarkBasicBloomFilterAdd benchmarks the Add method of the BasicBloomFilter.
 func BenchmarkBasicBloomFilterAdd(b *testing.B) {
-	bf := NewBasicBloomFilter(WithCapacity(1000000), WithFalsePositiveRate(0.01), WithHasher(xxHasher{}))
+	bf := NewBasicBloomFilter(WithCapacity(1000000), WithFalsePositiveRate(0.01))
 
 	b.ResetTimer() // Reset the timer to exclude the setup time
 	for n := 0; n < b.N; n++ {
@@ -117,7 +117,7 @@ func BenchmarkBasicBloomFilterAdd(b *testing.B) {
 
 // BenchmarkBasicBloomFilterTest benchmarks the Test method of the BasicBloomFilter.
 func BenchmarkBasicBloomFilterTest(b *testing.B) {
-	bf := NewBasicBloomFilter(WithCapacity(1000000), WithFalsePositiveRate(0.01), WithHasher(xxHasher{}))
+	bf := NewBasicBloomFilter(WithCapacity(1000000), WithFalsePositiveRate(0.01))
 
 	for i := 0; i < 100000; i++ {
 		value := []byte(fmt.Sprintf("value-%d", i))

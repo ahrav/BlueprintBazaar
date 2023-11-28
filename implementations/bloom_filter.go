@@ -2,10 +2,13 @@ package implementations
 
 import (
 	"hash"
+	"hash/fnv"
 	"math"
 	"sync"
 
 	"github.com/cespare/xxhash/v2"
+	"github.com/dchest/siphash"
+	"github.com/spaolacci/murmur3"
 )
 
 // BloomFilter provides a common interface for bloom filter implementations.
@@ -18,8 +21,8 @@ type BloomFilter interface {
 
 // Hasher provides a common interface for hash functions.
 type Hasher interface {
-	// Hashes returns a slice of n hash functions.
-	Hashes(n uint64) []hash.Hash64
+	// HashFn returns a hash function.
+	HashFn() hash.Hash64
 	// Name of the hash function.
 	Name() string
 }
@@ -31,8 +34,9 @@ type BasicBloomFilter struct {
 	// Bit array representing set membership of elements.
 	bitArr []uint64
 	k      uint64 // Number of hash functions.
-	// Hash functions used to map elements to bits in the bit array.
-	hashFns []hash.Hash64
+	// hasher is the hash function used to map elements to bits in the bit array.
+	// Default is xxhash.
+	hasher Hasher
 }
 
 // Config needed to create a new bloom filter.
@@ -92,7 +96,7 @@ func NewBasicBloomFilter(opts ...BloomFilterOption) *BasicBloomFilter {
 	c := &Config{
 		Capacity:          defaultCapacity,
 		FalsePositiveRate: defaultFalsePositiveRate,
-		Hasher:            xxHasher{},
+		Hasher:            sipHasher{},
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -101,10 +105,10 @@ func NewBasicBloomFilter(opts ...BloomFilterOption) *BasicBloomFilter {
 	m := calculateBitArraySize(c.Capacity, c.FalsePositiveRate)
 	k := calculateHashesCount(c.Capacity, c.FalsePositiveRate)
 	return &BasicBloomFilter{
-		m:       m,
-		bitArr:  make([]uint64, (m+63)/64),
-		k:       uint64(k),
-		hashFns: c.Hasher.Hashes(uint64(k)),
+		m:      m,
+		bitArr: make([]uint64, (m+63)/64),
+		k:      uint64(k),
+		hasher: c.Hasher,
 	}
 }
 
@@ -123,7 +127,7 @@ func (b *BasicBloomFilter) Add(value []byte) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	for i := 0; i < int(b.k); i++ {
-		h := xxhash.New()
+		h := b.hasher.HashFn()
 		h.Reset()
 		h.Write(value)
 		b.setBit(h.Sum64())
@@ -140,7 +144,7 @@ func (b *BasicBloomFilter) Test(value []byte) (bool, error) {
 	b.mu.RLock()
 	defer b.mu.RUnlock()
 	for i := 0; i < int(b.k); i++ {
-		h := xxhash.New()
+		h := b.hasher.HashFn()
 		h.Reset()
 		h.Write(value)
 		if !b.isBitSet(h.Sum64()) {
@@ -154,16 +158,47 @@ func (b *BasicBloomFilter) isBitSet(sum uint64) bool {
 	return b.bitArr[(sum%b.m)/64]&(1<<(sum%64)) != 0
 }
 
-const xxhashName = "xxhash"
+const (
+	xxhashName = "xxhash"
+	fnvaName   = "fnva"
+	murmurName = "murmur"
+)
+
+type sipHasher struct{}
+
+func (sipHasher) HashFn() hash.Hash64 {
+	zeroKey := make([]byte, 16)
+	return siphash.New(zeroKey)
+}
+
+func (sipHasher) Name() string {
+	return "siphash"
+}
+
+type murmurHasher struct{}
+
+func (murmurHasher) HashFn() hash.Hash64 {
+	return murmur3.New64()
+}
+
+func (murmurHasher) Name() string {
+	return murmurName
+}
+
+type fnvAHasher struct{}
+
+func (fnvAHasher) HashFn() hash.Hash64 {
+	return fnv.New64a()
+}
+
+func (fnvAHasher) Name() string {
+	return fnvaName
+}
 
 type xxHasher struct{}
 
-func (xxHasher) Hashes(n uint64) []hash.Hash64 {
-	hashes := make([]hash.Hash64, n)
-	for i := range hashes {
-		hashes[i] = xxhash.New()
-	}
-	return hashes
+func (xxHasher) HashFn() hash.Hash64 {
+	return xxhash.New()
 }
 
 func (xxHasher) Name() string {
